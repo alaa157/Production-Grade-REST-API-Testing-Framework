@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Auth response",
+  "description": "POST /auth returns exactly one of the success token shape or the failure reason shape.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["token"],
+      "properties": {
+        "token": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["reason"],
+      "properties": {
+        "reason": { "type": "string", "enum": ["Bad credentials"] }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

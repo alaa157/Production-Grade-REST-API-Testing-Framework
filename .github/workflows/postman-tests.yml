@@ -1,0 +1,43 @@
+name: Postman tests (Newman)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  newman:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        # Any install failure fails the job (quality gate: deps must resolve).
+        run: npm ci
+
+      - name: Validate collection files
+        # Fail fast on missing/invalid collection artifacts (catches bad merges).
+        run: |
+          test -f postman/collections/restful-booker-api.postman_collection.json
+          test -f postman/environments/restful-booker.postman_environment.json
+          test -d reports
+          node -e "JSON.parse(require('fs').readFileSync('postman/collections/restful-booker-api.postman_collection.json')); console.log('collection JSON ok')"
+
+      - name: Run Newman (CLI + JUnit report)
+        # Any failed assertion or collection error exits non-zero and fails
+        # the job. The JUnit report renders even on failure.
+        run: npm run postman:ci
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-reports
+          path: reports/newman-results.xml

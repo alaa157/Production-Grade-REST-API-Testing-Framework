@@ -1,0 +1,3705 @@
+{
+  "info": {
+    "name": "RESTful Booker API",
+    "_postman_id": "restful-booker-portfolio-001",
+    "description": "Production-grade API test collection for the public RESTful Booker API. Folders 01-08 mirror docs/test-scenarios.md IDs. Key responses carry inline JSON-schema assertions mirroring postman/schemas/*.json (Phase 7: CON-003/004/005). Chaining via token/bookingId/name variables written to both collection and environment scopes (Phase 8). Folder 07 pins observed negative contracts for defect review (Phase 9). Run: newman run postman/collections/restful-booker-api.postman_collection.json -e postman/environments/restful-booker.postman_environment.json. Response-time guards (2000ms, 10s cold-start-tolerant ping) are client-side smoke thresholds, not SLAs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://restful-booker.herokuapp.com"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "firstName",
+      "value": "John"
+    },
+    {
+      "key": "lastName",
+      "value": "Doe"
+    },
+    {
+      "key": "e2eFirst",
+      "value": ""
+    },
+    {
+      "key": "e2eBasicFirst",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Health",
+      "description": "Reachability + contract of GET/HEAD /ping (HLTH-001..003).",
+      "item": [
+        {
+          "name": "HealthCheck - GET ping",
+          "request": {
+            "description": "HLTH-001/HLTH-003: ping returns 201 Created (text/plain), not 200. Cold-start tolerant guard (first call woke dyno: 5.3s observed once).",
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 [HLTH-001]\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [HLTH-003]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Body is 'Created' [HLTH-001]\", function () {",
+                  "    pm.expect(pm.response.text()).to.eql(\"Created\");",
+                  "});",
+                  "pm.test(\"Response time below 10000ms (cold-start tolerant first call; not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HealthCheck - HEAD ping",
+          "request": {
+            "description": "HLTH-002: headers-only ping, 201 with empty body.",
+            "method": "HEAD",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 [HLTH-002]\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"HEAD body is empty [HLTH-002]\", function () {",
+                  "    pm.expect(pm.response.text()).to.eql(\"\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Authentication",
+      "description": "Valid token issuance (AUTH-001). Stores {{token}} for later folders. Failure contract (AUTH-002..005) lives in 07 - Negative Tests.",
+      "item": [
+        {
+          "name": "CreateToken - valid credentials",
+          "request": {
+            "description": "AUTH-001: admin/password123 returns token; stores collection variable 'token'.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"admin\", \"password\": \"password123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [AUTH-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-003]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Token is a non-empty string [AUTH-001]\", function () {",
+                  "    pm.expect(data).to.have.property(\"token\");",
+                  "    pm.expect(data.token).to.be.a(\"string\").and.to.have.length.above(0);",
+                  "});",
+                  "pm.collectionVariables.set(\"token\", data.token);",
+                  "pm.environment.set(\"token\", data.token);",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Auth response\",",
+                  "  \"description\": \"POST /auth returns exactly one of the success token shape or the failure reason shape.\",",
+                  "  \"oneOf\": [",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"token\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"token\": {",
+                  "          \"type\": \"string\",",
+                  "          \"minLength\": 1",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    },",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"reason\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"reason\": {",
+                  "          \"type\": \"string\",",
+                  "          \"enum\": [",
+                  "            \"Bad credentials\"",
+                  "          ]",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    }",
+                  "  ]",
+                  "};",
+                  "pm.test(\"Response matches auth-schema.json [CON-003]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Booking - Create",
+      "description": "Creation happy path + first probes (BOOK-001/002, NEG-001/004, CON-005). Stores {{bookingId}}. Wrong-Content-Type negative (NEG-011) lives in 07 - Negative Tests.",
+      "item": [
+        {
+          "name": "CreateBooking - valid payload",
+          "request": {
+            "description": "BOOK-001/002 + CON-005: creates booking, echo matches, stores bookingId + names.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{firstName}}\",\n  \"lastname\": \"{{lastName}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"},\n  \"additionalneeds\": \"Breakfast\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"firstName\", \"PM-\" + Date.now());",
+                  "pm.environment.set(\"firstName\", \"PM-\" + Date.now());",
+                  "pm.collectionVariables.set(\"lastName\", \"Run-\" + Date.now());",
+                  "pm.environment.set(\"lastName\", \"Run-\" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BOOK-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Create response has integer bookingid + booking echo [BOOK-001/CON-005]\", function () {",
+                  "    pm.expect(data).to.have.property(\"bookingid\");",
+                  "    pm.expect(data.bookingid).to.be.a(\"number\");",
+                  "    pm.expect(data).to.have.property(\"booking\");",
+                  "    pm.expect(data.booking.firstname).to.eql(pm.environment.get(\"firstName\") || pm.collectionVariables.get(\"firstName\"));",
+                  "    pm.expect(data.booking.lastname).to.eql(pm.environment.get(\"lastName\") || pm.collectionVariables.get(\"lastName\"));",
+                  "    pm.expect(data.booking.totalprice).to.eql(150);",
+                  "    pm.expect(data.booking.depositpaid).to.eql(true);",
+                  "    pm.expect(data.booking.bookingdates.checkin).to.eql(\"2026-01-01\");",
+                  "    pm.expect(data.booking.bookingdates.checkout).to.eql(\"2026-01-05\");",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingId\", data.bookingid);",
+                  "pm.environment.set(\"bookingId\", data.bookingid);",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Booking creation response\",",
+                  "  \"description\": \"POST /booking returns an integer bookingid plus the full booking object.\",",
+                  "  \"type\": \"object\",",
+                  "  \"required\": [",
+                  "    \"bookingid\",",
+                  "    \"booking\"",
+                  "  ],",
+                  "  \"properties\": {",
+                  "    \"bookingid\": {",
+                  "      \"type\": \"integer\"",
+                  "    },",
+                  "    \"booking\": {",
+                  "      \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "      \"title\": \"Booking object\",",
+                  "      \"description\": \"Happy-path booking shape (GET /booking/{id}, PUT/PATCH echoes). Coercion variants (totalprice null, artifact dates) are asserted by dedicated negative tests, not this schema.\",",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"firstname\",",
+                  "        \"lastname\",",
+                  "        \"totalprice\",",
+                  "        \"depositpaid\",",
+                  "        \"bookingdates\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"firstname\": {",
+                  "          \"type\": \"string\"",
+                  "        },",
+                  "        \"lastname\": {",
+                  "          \"type\": \"string\"",
+                  "        },",
+                  "        \"totalprice\": {",
+                  "          \"type\": \"number\"",
+                  "        },",
+                  "        \"depositpaid\": {",
+                  "          \"type\": \"boolean\"",
+                  "        },",
+                  "        \"bookingdates\": {",
+                  "          \"type\": \"object\",",
+                  "          \"required\": [",
+                  "            \"checkin\",",
+                  "            \"checkout\"",
+                  "          ],",
+                  "          \"properties\": {",
+                  "            \"checkin\": {",
+                  "              \"type\": \"string\"",
+                  "            },",
+                  "            \"checkout\": {",
+                  "              \"type\": \"string\"",
+                  "            }",
+                  "          },",
+                  "          \"additionalProperties\": false",
+                  "        },",
+                  "        \"additionalneeds\": {",
+                  "          \"type\": [",
+                  "            \"string\",",
+                  "            \"null\"",
+                  "          ]",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    }",
+                  "  },",
+                  "  \"additionalProperties\": false",
+                  "};",
+                  "pm.test(\"Response matches booking-response-schema.json [CON-005]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CreateBooking - missing firstname gives 500",
+          "request": {
+            "description": "NEG-001: absent firstname crashes (500), not 400. Top defect candidate.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"lastname\": \"NoFirst\", \"totalprice\": 100, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 500 [NEG-001]\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Body is Internal Server Error [NEG-001]\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"Internal Server Error\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CreateBooking - string price coerced to null",
+          "request": {
+            "description": "NEG-004: wrong-type totalprice accepted, stored null. Coercion candidate.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Coerce\", \"lastname\": \"Price\", \"totalprice\": \"not-a-number\", \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [NEG-004]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"totalprice coerced to null [NEG-004]\", function () {",
+                  "    pm.expect(data.booking.totalprice).to.eql(null);",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Booking - Read",
+      "description": "Retrieval + listing/filtering (BOOK-002/003, FILT-001..005, CON-002/004). Invalid-ID probes (BOOK-004/005, BND-006) live in 07 - Negative Tests.",
+      "item": [
+        {
+          "name": "GetBooking - live ID round-trips",
+          "request": {
+            "description": "BOOK-002/003 + CON-004: stored booking matches created values.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BOOK-003]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Round-trip values match creation [BOOK-002]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(pm.environment.get(\"firstName\") || pm.collectionVariables.get(\"firstName\"));",
+                  "    pm.expect(data.lastname).to.eql(pm.environment.get(\"lastName\") || pm.collectionVariables.get(\"lastName\"));",
+                  "    pm.expect(data.totalprice).to.eql(150);",
+                  "    pm.expect(data.depositpaid).to.eql(true);",
+                  "    pm.expect(data.bookingdates).to.eql({checkin: \"2026-01-01\", checkout: \"2026-01-05\"});",
+                  "});",
+                  "pm.test(\"Booking types are strict [CON-004]\", function () {",
+                  "    pm.expect(data.firstname).to.be.a(\"string\");",
+                  "    pm.expect(data.totalprice).to.be.a(\"number\");",
+                  "    pm.expect(data.depositpaid).to.be.a(\"boolean\");",
+                  "    pm.expect(data.bookingdates).to.be.an(\"object\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Booking object\",",
+                  "  \"description\": \"Happy-path booking shape (GET /booking/{id}, PUT/PATCH echoes). Coercion variants (totalprice null, artifact dates) are asserted by dedicated negative tests, not this schema.\",",
+                  "  \"type\": \"object\",",
+                  "  \"required\": [",
+                  "    \"firstname\",",
+                  "    \"lastname\",",
+                  "    \"totalprice\",",
+                  "    \"depositpaid\",",
+                  "    \"bookingdates\"",
+                  "  ],",
+                  "  \"properties\": {",
+                  "    \"firstname\": {",
+                  "      \"type\": \"string\"",
+                  "    },",
+                  "    \"lastname\": {",
+                  "      \"type\": \"string\"",
+                  "    },",
+                  "    \"totalprice\": {",
+                  "      \"type\": \"number\"",
+                  "    },",
+                  "    \"depositpaid\": {",
+                  "      \"type\": \"boolean\"",
+                  "    },",
+                  "    \"bookingdates\": {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"checkin\",",
+                  "        \"checkout\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"checkin\": {",
+                  "          \"type\": \"string\"",
+                  "        },",
+                  "        \"checkout\": {",
+                  "          \"type\": \"string\"",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    },",
+                  "    \"additionalneeds\": {",
+                  "      \"type\": [",
+                  "        \"string\",",
+                  "        \"null\"",
+                  "      ]",
+                  "    }",
+                  "  },",
+                  "  \"additionalProperties\": false",
+                  "};",
+                  "pm.test(\"Response matches booking-schema.json [CON-004]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBookingIds - list shape",
+          "request": {
+            "description": "FILT-001: 200 array of {bookingid}; never exact count (volatile host).",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [FILT-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"List is a non-empty array of bookingid objects [FILT-001]\", function () {",
+                  "    pm.expect(data).to.be.an(\"array\");",
+                  "    pm.expect(data.length).to.be.above(0);",
+                  "    data.slice(0, 20).forEach(function (b) {",
+                  "        pm.expect(b).to.have.property(\"bookingid\");",
+                  "        pm.expect(b.bookingid).to.be.a(\"number\");",
+                  "    });",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Booking ID list\",",
+                  "  \"description\": \"GET /booking returns an array of bookingid objects. Length is volatile (shared host) and never asserted.\",",
+                  "  \"type\": \"array\",",
+                  "  \"items\": {",
+                  "    \"type\": \"object\",",
+                  "    \"required\": [",
+                  "      \"bookingid\"",
+                  "    ],",
+                  "    \"properties\": {",
+                  "      \"bookingid\": {",
+                  "        \"type\": \"integer\"",
+                  "      }",
+                  "    },",
+                  "    \"additionalProperties\": false",
+                  "  }",
+                  "};",
+                  "pm.test(\"Response matches booking-list-schema.json [FILT-001]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBookingIds - filter firstname",
+          "request": {
+            "description": "FILT-002: ?firstname=Sally narrows; shape-only.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname=Sally",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "Sally"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [FILT-002]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Filter returns array (data-dependent) [FILT-002]\", function () {",
+                  "    pm.expect(data).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBookingIds - filter lastname",
+          "request": {
+            "description": "FILT-003: ?lastname=Brown narrows.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking?lastname=Brown",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "lastname",
+                  "value": "Brown"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [FILT-003]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Filter returns array [FILT-003]\", function () {",
+                  "    pm.expect(data).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBookingIds - filter date window",
+          "request": {
+            "description": "FILT-004: date window returns array (observed [] for one window; data-dependent, shape-only).",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking?checkin=2013-01-01&checkout=2014-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "checkin",
+                  "value": "2013-01-01"
+                },
+                {
+                  "key": "checkout",
+                  "value": "2014-12-31"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [FILT-004]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Date filter returns array [FILT-004]\", function () {",
+                  "    pm.expect(data).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBookingIds - combined filter narrows",
+          "request": {
+            "description": "FILT-005: firstname+lastname AND-narrows (observed [3]-style single hit).",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname=Sally&lastname=Brown",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "Sally"
+                },
+                {
+                  "key": "lastname",
+                  "value": "Brown"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [FILT-005]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Combined filter returns array [FILT-005]\", function () {",
+                  "    pm.expect(data).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Booking - Update",
+      "description": "Full + partial update with auth matrix (BOOK-006/007/008/009, AUTH-006/008/009).",
+      "item": [
+        {
+          "name": "UpdateBooking PUT - with token",
+          "request": {
+            "description": "BOOK-006 + AUTH-006: full replace persists; echo equals replacement.",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"UpdatedFirst\", \"lastname\": \"UpdatedLast\", \"totalprice\": 200, \"depositpaid\": false, \"bookingdates\": {\"checkin\": \"2026-03-01\", \"checkout\": \"2026-03-05\"}, \"additionalneeds\": \"Lunch\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BOOK-006]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"PUT echo equals replacement [BOOK-006]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"UpdatedFirst\");",
+                  "    pm.expect(data.lastname).to.eql(\"UpdatedLast\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "    pm.expect(data.depositpaid).to.eql(false);",
+                  "    pm.expect(data.bookingdates).to.eql({checkin: \"2026-03-01\", checkout: \"2026-03-05\"});",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UpdateBooking PUT - without token 403",
+          "request": {
+            "description": "BOOK-007 + AUTH-008: missing token refused.",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"UpdatedFirst\", \"lastname\": \"UpdatedLast\", \"totalprice\": 200, \"depositpaid\": false, \"bookingdates\": {\"checkin\": \"2026-03-01\", \"checkout\": \"2026-03-05\"}, \"additionalneeds\": \"Lunch\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403 [AUTH-008]\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UpdateBooking PUT - invalid token 403",
+          "request": {
+            "description": "AUTH-009: bad token refused.",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token=invalid123",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"UpdatedFirst\", \"lastname\": \"UpdatedLast\", \"totalprice\": 200, \"depositpaid\": false, \"bookingdates\": {\"checkin\": \"2026-03-01\", \"checkout\": \"2026-03-05\"}, \"additionalneeds\": \"Lunch\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403 [AUTH-009]\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UpdateBooking PUT - malformed JSON 400",
+          "request": {
+            "description": "NEG-008: unparsable body rejected even with valid token.",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{bad json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 [NEG-008]\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PartialUpdate PATCH - with token",
+          "request": {
+            "description": "BOOK-008: merge preserves UpdatedLast + PUT values.",
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Patched\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BOOK-008]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"PATCH merges, preserves other fields [BOOK-008]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"Patched\");",
+                  "    pm.expect(data.lastname).to.eql(\"UpdatedLast\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PartialUpdate PATCH - without token 403",
+          "request": {
+            "description": "BOOK-009 + AUTH-008: missing token refused.",
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Nope\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403 [AUTH-008]\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PartialUpdate PATCH - invalid token 403",
+          "request": {
+            "description": "BOOK-009 + AUTH-009: bad token refused.",
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token=invalid123",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Nope\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403 [AUTH-009]\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PartialUpdate PATCH - malformed JSON 400",
+          "request": {
+            "description": "NEG-008: unparsable body rejected even with valid token.",
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{bad json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 [NEG-008]\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - Booking - Delete",
+      "description": "Deletion with auth matrix + verify-gone (BOOK-010/011/012, AUTH-008, NEG-012). Order matters: 403-probes run before the real delete.",
+      "item": [
+        {
+          "name": "DeleteBooking - without token 403",
+          "request": {
+            "description": "BOOK-011: refused; booking must survive (next request proves it).",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403 [BOOK-011]\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteBooking - invalid token 403",
+          "request": {
+            "description": "BOOK-011 + AUTH-009: bad token refused; booking must survive.",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token=invalid123",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403 [AUTH-009]\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteBooking - with token 201",
+          "request": {
+            "description": "BOOK-010: authenticated delete returns 201 Created (text/plain).",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 [BOOK-010]\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Delete body is 'Created' [BOOK-010]\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"Created\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBooking - verify gone 404",
+          "request": {
+            "description": "BOOK-010 + NEG-012: deleted ID is Not Found \u2014 the deletion proof.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 [NEG-012]\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteBooking - re-delete 405",
+          "request": {
+            "description": "BOOK-012: second delete is 405, not 404.",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 405 [BOOK-012]\", function () {",
+                  "    pm.response.to.have.status(405);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 - Negative Tests",
+      "description": "Consolidated negative section (Phase 9): auth failures (AUTH-002..005, oneOf-schema guarded), invalid IDs (BOOK-004/005, BND-006), payload/header/boundary coercions (NEG-*, BND-001..005). Each pins the observed contract for defect review. Truly-omitted Content-Type cannot be expressed in Newman (auto-header) and lives in tests/api/test_request_headers.py.",
+      "item": [
+        {
+          "name": "CreateToken - invalid password",
+          "request": {
+            "description": "AUTH-002: 200 + reason, no token (the status-code trap).",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"admin\", \"password\": \"wrong-password\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [AUTH-002]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-003]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Failure body is reason-only, no token [AUTH-002]\", function () {",
+                  "    pm.expect(data).to.have.property(\"reason\", \"Bad credentials\");",
+                  "    pm.expect(data).to.not.have.property(\"token\");",
+                  "});",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Auth response\",",
+                  "  \"description\": \"POST /auth returns exactly one of the success token shape or the failure reason shape.\",",
+                  "  \"oneOf\": [",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"token\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"token\": {",
+                  "          \"type\": \"string\",",
+                  "          \"minLength\": 1",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    },",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"reason\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"reason\": {",
+                  "          \"type\": \"string\",",
+                  "          \"enum\": [",
+                  "            \"Bad credentials\"",
+                  "          ]",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    }",
+                  "  ]",
+                  "};",
+                  "pm.test(\"Response matches auth-schema.json [CON-003]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CreateToken - invalid user",
+          "request": {
+            "description": "AUTH-003: same failure shape as AUTH-002.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"invalid-user\", \"password\": \"invalid-password\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [AUTH-003]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-003]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Failure body is reason-only, no token [AUTH-002]\", function () {",
+                  "    pm.expect(data).to.have.property(\"reason\", \"Bad credentials\");",
+                  "    pm.expect(data).to.not.have.property(\"token\");",
+                  "});",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Auth response\",",
+                  "  \"description\": \"POST /auth returns exactly one of the success token shape or the failure reason shape.\",",
+                  "  \"oneOf\": [",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"token\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"token\": {",
+                  "          \"type\": \"string\",",
+                  "          \"minLength\": 1",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    },",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"reason\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"reason\": {",
+                  "          \"type\": \"string\",",
+                  "          \"enum\": [",
+                  "            \"Bad credentials\"",
+                  "          ]",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    }",
+                  "  ]",
+                  "};",
+                  "pm.test(\"Response matches auth-schema.json [CON-003]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CreateToken - missing body",
+          "request": {
+            "description": "AUTH-004: {} yields Bad credentials, not a validation error.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [AUTH-004]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-003]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Failure body is reason-only, no token [AUTH-002]\", function () {",
+                  "    pm.expect(data).to.have.property(\"reason\", \"Bad credentials\");",
+                  "    pm.expect(data).to.not.have.property(\"token\");",
+                  "});",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Auth response\",",
+                  "  \"description\": \"POST /auth returns exactly one of the success token shape or the failure reason shape.\",",
+                  "  \"oneOf\": [",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"token\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"token\": {",
+                  "          \"type\": \"string\",",
+                  "          \"minLength\": 1",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    },",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"reason\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"reason\": {",
+                  "          \"type\": \"string\",",
+                  "          \"enum\": [",
+                  "            \"Bad credentials\"",
+                  "          ]",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    }",
+                  "  ]",
+                  "};",
+                  "pm.test(\"Response matches auth-schema.json [CON-003]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CreateToken - empty credentials",
+          "request": {
+            "description": "AUTH-005: empty strings yield Bad credentials.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"\", \"password\": \"\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [AUTH-005]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-003]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Failure body is reason-only, no token [AUTH-002]\", function () {",
+                  "    pm.expect(data).to.have.property(\"reason\", \"Bad credentials\");",
+                  "    pm.expect(data).to.not.have.property(\"token\");",
+                  "});",
+                  "var schema = {",
+                  "  \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "  \"title\": \"Auth response\",",
+                  "  \"description\": \"POST /auth returns exactly one of the success token shape or the failure reason shape.\",",
+                  "  \"oneOf\": [",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"token\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"token\": {",
+                  "          \"type\": \"string\",",
+                  "          \"minLength\": 1",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    },",
+                  "    {",
+                  "      \"type\": \"object\",",
+                  "      \"required\": [",
+                  "        \"reason\"",
+                  "      ],",
+                  "      \"properties\": {",
+                  "        \"reason\": {",
+                  "          \"type\": \"string\",",
+                  "          \"enum\": [",
+                  "            \"Bad credentials\"",
+                  "          ]",
+                  "        }",
+                  "      },",
+                  "      \"additionalProperties\": false",
+                  "    }",
+                  "  ]",
+                  "};",
+                  "pm.test(\"Response matches auth-schema.json [CON-003]\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBooking - nonexistent ID 404",
+          "request": {
+            "description": "BOOK-004: /999999 is text/plain Not Found.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "999999"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 [BOOK-004]\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBooking - malformed ID 404",
+          "request": {
+            "description": "BOOK-005: /abc is 404, not 400.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "abc"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 [BOOK-005]\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBooking - huge ID 404",
+          "request": {
+            "description": "BND-006: /9999999999 is 404.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/9999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "9999999999"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 [BND-006]\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CreateBooking - wrong Content-Type gives 500",
+          "request": {
+            "description": "NEG-011: text/plain body-with-JSON yields 500 (contrast malformed-JSON 400).",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"CT\", \"lastname\": \"Wrong\", \"totalprice\": 1, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-02\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 500 [NEG-011]\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG missing lastname 500",
+          "request": {
+            "description": "NEG-002: 500 Internal Server Error.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"NoLast\", \"totalprice\": 100, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 500 [NEG-002]\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG missing bookingdates 500",
+          "request": {
+            "description": "NEG-003: 500.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"NoDates\", \"lastname\": \"X\", \"totalprice\": 100, \"depositpaid\": true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 500 [NEG-003]\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG string boolean coerced true",
+          "request": {
+            "description": "NEG-005: depositpaid 'yes' stored true, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Bool\", \"lastname\": \"Coerce\", \"totalprice\": 100, \"depositpaid\": \"yes\", \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [NEG-005]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"depositpaid coerced to true [NEG-005]\", function () {",
+                  "    pm.expect(data.booking.depositpaid).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG bad date artifact",
+          "request": {
+            "description": "NEG-006: checkin becomes 0NaN-aN-aN, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Bad\", \"lastname\": \"Date\", \"totalprice\": 100, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"not-a-date\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [NEG-006]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"checkin is the JS-date artifact [NEG-006]\", function () {",
+                  "    pm.expect(data.booking.bookingdates.checkin).to.eql(\"0NaN-aN-aN\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG empty firstname stored",
+          "request": {
+            "description": "NEG-007: empty string accepted, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"\", \"lastname\": \"Empty\", \"totalprice\": 100, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [NEG-007]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"empty firstname stored verbatim [NEG-007]\", function () {",
+                  "    pm.expect(data.booking.firstname).to.eql(\"\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG malformed JSON 400",
+          "request": {
+            "description": "NEG-008: raw '{bad json' is 400 Bad Request.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{bad json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 [NEG-008]\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG extra field dropped",
+          "request": {
+            "description": "NEG-009: unknown field ignored, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Extra\", \"lastname\": \"Field\", \"totalprice\": 100, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}, \"surprise\": \"hello\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [NEG-009]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"unknown field absent from echo [NEG-009]\", function () {",
+                  "    pm.expect(data.booking).to.not.have.property(\"surprise\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG null additionalneeds",
+          "request": {
+            "description": "NEG-010: stored null, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Null\", \"lastname\": \"Needs\", \"totalprice\": 100, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}, \"additionalneeds\": null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [NEG-010]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"additionalneeds is null [NEG-010]\", function () {",
+                  "    pm.expect(data.booking.additionalneeds).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BND zero price stored",
+          "request": {
+            "description": "BND-001: totalprice 0 stored, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Zero\", \"lastname\": \"Price\", \"totalprice\": 0, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BND-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"zero price stored [BND-001]\", function () {",
+                  "    pm.expect(data.booking.totalprice).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BND negative price stored",
+          "request": {
+            "description": "BND-002: -50 stored, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Neg\", \"lastname\": \"Price\", \"totalprice\": -50, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BND-002]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"negative price stored [BND-002]\", function () {",
+                  "    pm.expect(data.booking.totalprice).to.eql(-50);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BND huge price stored",
+          "request": {
+            "description": "BND-003: 999999999 stored, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Huge\", \"lastname\": \"Price\", \"totalprice\": 999999999, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BND-003]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"huge price stored [BND-003]\", function () {",
+                  "    pm.expect(data.booking.totalprice).to.eql(999999999);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BND inverted dates stored",
+          "request": {
+            "description": "BND-004: checkout-before-checkin stored as-is, 200.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"Inv\", \"lastname\": \"Dates\", \"totalprice\": 100, \"depositpaid\": true, \"bookingdates\": {\"checkin\": \"2026-01-10\", \"checkout\": \"2026-01-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [BND-004]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"inverted dates stored [BND-004]\", function () {",
+                  "    pm.expect(data.booking.bookingdates.checkin).to.eql(\"2026-01-10\");",
+                  "    pm.expect(data.booking.bookingdates.checkout).to.eql(\"2026-01-05\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 - End-to-End Workflows",
+      "description": "E2E-001 token lifecycle + E2E-002 Basic-auth lifecycle (each: own booking, ordered create-read-update-patch-delete-verify).",
+      "item": [
+        {
+          "name": "E2E auth - fresh token",
+          "request": {
+            "description": "E2E-001 step 1: authenticate, refresh {{token}}.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"admin\", \"password\": \"password123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"Token is a non-empty string [AUTH-001]\", function () {",
+                  "    pm.expect(data).to.have.property(\"token\");",
+                  "    pm.expect(data.token).to.be.a(\"string\").and.to.have.length.above(0);",
+                  "});",
+                  "pm.collectionVariables.set(\"token\", data.token);",
+                  "pm.environment.set(\"token\", data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E create booking",
+          "request": {
+            "description": "E2E-001 step 2: create lifecycle booking, store {{bookingId}}.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{e2eFirst}}\",\n  \"lastname\": \"Lifecycle\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"},\n  \"additionalneeds\": \"Breakfast\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"e2eFirst\", \"E2E-\" + Date.now());",
+                  "pm.environment.set(\"e2eFirst\", \"E2E-\" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"E2E booking created with lifecycle values [E2E-001]\", function () {",
+                  "    pm.expect(data.bookingid).to.be.a(\"number\");",
+                  "    pm.expect(data.booking.firstname).to.eql(pm.environment.get(\"e2eFirst\") || pm.collectionVariables.get(\"e2eFirst\"));",
+                  "    pm.expect(data.booking.totalprice).to.eql(150);",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingId\", data.bookingid);",
+                  "pm.environment.set(\"bookingId\", data.bookingid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E get created booking",
+          "request": {
+            "description": "E2E-001 step 3: read-back matches creation.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"E2E read matches creation [E2E-001]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(pm.environment.get(\"e2eFirst\") || pm.collectionVariables.get(\"e2eFirst\"));",
+                  "    pm.expect(data.lastname).to.eql(\"Lifecycle\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E full update booking",
+          "request": {
+            "description": "E2E-001 step 4: PUT replacement persists.",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"UpdatedFirst\", \"lastname\": \"UpdatedLast\", \"totalprice\": 200, \"depositpaid\": false, \"bookingdates\": {\"checkin\": \"2026-03-01\", \"checkout\": \"2026-03-05\"}, \"additionalneeds\": \"Lunch\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"E2E PUT persisted [E2E-001]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"UpdatedFirst\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E partial update booking",
+          "request": {
+            "description": "E2E-001 step 5: PATCH merges.",
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"E2E-Patched\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-001]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"E2E PATCH merged [E2E-001]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"E2E-Patched\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E delete booking",
+          "request": {
+            "description": "E2E-001 step 6: DELETE returns 201.",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 [E2E-001]\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E verify deletion 404",
+          "request": {
+            "description": "E2E-001 step 7: gone is 404.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 [E2E-001]\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E(Basic) create booking",
+          "request": {
+            "description": "E2E-002 step 1: own booking for the Basic-auth chain.",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{e2eBasicFirst}}\",\n  \"lastname\": \"Lifecycle\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\"checkin\": \"2026-01-01\", \"checkout\": \"2026-01-05\"}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"e2eBasicFirst\", \"E2EBasic-\" + Date.now());",
+                  "pm.environment.set(\"e2eBasicFirst\", \"E2EBasic-\" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-002]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"E2E(Basic) booking created [E2E-002]\", function () {",
+                  "    pm.expect(data.bookingid).to.be.a(\"number\");",
+                  "    pm.expect(data.booking.firstname).to.eql(pm.environment.get(\"e2eBasicFirst\") || pm.collectionVariables.get(\"e2eBasicFirst\"));",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingId\", data.bookingid);",
+                  "pm.environment.set(\"bookingId\", data.bookingid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E(Basic) full update booking",
+          "request": {
+            "description": "E2E-002 step 2: PUT over Basic auth persists.",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Basic YWRtaW46cGFzc3dvcmQxMjM=",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"{{e2eBasicFirst}}\", \"lastname\": \"Lifecycle\", \"totalprice\": 200, \"depositpaid\": false, \"bookingdates\": {\"checkin\": \"2026-03-01\", \"checkout\": \"2026-03-05\"}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-002]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"E2E(Basic) PUT persisted [E2E-002]\", function () {",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "    pm.expect(data.depositpaid).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E(Basic) partial update booking",
+          "request": {
+            "description": "E2E-002 step 3: PATCH over Basic auth merges.",
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Basic YWRtaW46cGFzc3dvcmQxMjM=",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"E2EBasic-Patched\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E-002]\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type includes application/json [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test(\"E2E(Basic) PATCH merged [E2E-002]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"E2EBasic-Patched\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E(Basic) delete booking",
+          "request": {
+            "description": "E2E-002 step 4: DELETE over Basic auth returns 201.",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic YWRtaW46cGFzc3dvcmQxMjM=",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 [E2E-002]\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E(Basic) verify deletion 404",
+          "request": {
+            "description": "E2E-002 step 5: gone is 404 \u2014 mechanism-independent lifecycle proof.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 [E2E-002]\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test(\"Content-Type includes text/plain [CON-002]\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/plain\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

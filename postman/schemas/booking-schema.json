@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Booking object",
+  "description": "Happy-path booking shape (GET /booking/{id}, PUT/PATCH echoes). Coercion variants (totalprice null, artifact dates) are asserted by dedicated negative tests, not this schema.",
+  "type": "object",
+  "required": ["firstname", "lastname", "totalprice", "depositpaid", "bookingdates"],
+  "properties": {
+    "firstname": { "type": "string" },
+    "lastname": { "type": "string" },
+    "totalprice": { "type": "number" },
+    "depositpaid": { "type": "boolean" },
+    "bookingdates": {
+      "type": "object",
+      "required": ["checkin", "checkout"],
+      "properties": {
+        "checkin": { "type": "string" },
+        "checkout": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "additionalneeds": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

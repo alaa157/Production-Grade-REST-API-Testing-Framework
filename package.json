@@ -1,0 +1,14 @@
+{
+  "name": "api-testing-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-grade API testing portfolio: Postman/Newman + pytest against RESTful Booker.",
+  "scripts": {
+    "postman": "newman run postman/collections/restful-booker-api.postman_collection.json -e postman/environments/restful-booker.postman_environment.json",
+    "postman:bare": "newman run postman/collections/restful-booker-api.postman_collection.json",
+    "postman:ci": "newman run postman/collections/restful-booker-api.postman_collection.json -e postman/environments/restful-booker.postman_environment.json -r cli,junit --reporter-junit-export reports/newman-results.xml"
+  },
+  "devDependencies": {
+    "newman": "^6.2.2"
+  }
+}

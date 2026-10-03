@@ -1,0 +1,57 @@
+name: API tests (pytest)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        # Any install failure fails the job (quality gate: deps must resolve).
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate project structure
+        # Fail fast if the expected skeleton is missing (catches bad merges).
+        run: |
+          test -f requirements.txt
+          test -f pytest.ini
+          test -f src/api_client.py
+          test -f src/config.py
+          test -f src/test_data.py
+          test -f tests/conftest.py
+          test -d tests/api
+          test -d tests/schemas
+          test -d reports
+          python -c "import requests, pytest, jsonschema, dotenv; print('deps ok')"
+
+      - name: Run pytest (JUnit + HTML reports)
+        # Any test failure (incl. schema violations) exits non-zero and
+        # fails the job. Reports always render, even on failure.
+        run: |
+          pytest \
+            --junitxml=reports/pytest-results.xml \
+            --html=reports/pytest-report.html \
+            --self-contained-html
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-reports
+          path: |
+            reports/pytest-results.xml
+            reports/pytest-report.html

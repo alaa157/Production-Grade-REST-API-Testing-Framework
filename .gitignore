@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+.venv/
+venv/
+.env/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Pytest / test artifacts
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.log
+reports/*.html
+reports/*.xml
+reports/*.json
+!reports/.gitkeep
+
+# Environment / secrets — never commit real credentials
+.env
+*.pem
+*.key
+
+# Node / Newman
+node_modules/
+npm-debug.log*
+.newman/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Temporary
+/tmp/
+*.tmp
+*.bak

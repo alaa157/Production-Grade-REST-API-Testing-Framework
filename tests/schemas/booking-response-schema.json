@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Booking creation response",
+  "description": "POST /booking returns an integer bookingid plus the full booking object.",
+  "type": "object",
+  "required": ["bookingid", "booking"],
+  "properties": {
+    "bookingid": { "type": "integer" },
+    "booking": { "$ref": "booking-schema.json" }
+  },
+  "additionalProperties": false
+}

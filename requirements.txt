@@ -1,0 +1,8 @@
+# Core HTTP + testing stack (Phase 0 baseline)
+requests>=2.31.0
+pytest>=8.0.0
+jsonschema>=4.20.0
+python-dotenv>=1.0.0
+
+# Reporting (pytest-html is sufficient for Phase 0; Allure optional later)
+pytest-html>=4.1.0
