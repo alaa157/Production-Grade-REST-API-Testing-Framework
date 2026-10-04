@@ -1,9 +1,10 @@
 # Defect Summary — RESTful Booker (Phase 21)
 
 > All entries below describe **genuinely observed behavior** probed live
-> against `https://restful-booker.herokuapp.com` on 2026-10-03 and pinned by
-> automated assertions in both harnesses (Postman/Newman collection +
-> pytest). Nothing here is invented to look impressive: where the API's
+> against `https://restful-booker.herokuapp.com` on 2026-10-03. Automation
+> coverage varies by finding and is stated in each evidence section; D-006 is
+> documented from a manual probe and is not CI-gated. Nothing here is invented
+> to look impressive: where the API's
 > contract is merely surprising but self-consistent, the entry is marked
 > `Contract quirk` rather than `Defect`. Expected results state what a
 > conventional REST API would do; actual results state what this demo API
@@ -90,7 +91,7 @@ functions from `tests/api/`.
 ## D-004 — No value validation on the leniency envelope
 
 - **Severity:** Low (Medium for price) · **Priority:** P1 · **Status:**
-  Observed, automated
+  Observed; automation coverage varies by case
 - **Type:** Risk area (lenient-by-design demo API, documented not fixed)
 - **Endpoint / Method:** `POST /booking`
 - **Preconditions:** None.
@@ -99,8 +100,11 @@ functions from `tests/api/`.
   names, unknown extra field `"surprise"`, `"additionalneeds": null`.
 - **Expected result:** At least negative prices, inverted ranges, and
   empty names rejected or normalized per a stated rule.
-- **Actual result:** All return `200` and are stored verbatim (extra field
-  silently dropped, `null` optional stored as `null`).
+- **Actual result:** The listed probes returned `200`; supported booking
+  values were stored as submitted, the unknown extra field was dropped, and
+  the null optional field remained null. The 500-character-name case is
+  automated in pytest only; the other listed cases are covered in Postman
+  and/or pytest as identified below.
 - **Evidence:** Postman `NEG empty firstname stored`, `NEG extra field
   dropped`, `NEG null additionalneeds`, `BND zero|negative|huge price
   stored`, `BND inverted dates stored`; pytest
@@ -109,7 +113,9 @@ functions from `tests/api/`.
   `test_create_with_inverted_dates_is_stored_without_range_check`,
   `test_create_with_very_long_name_is_stored_verbatim`,
   `test_create_ignores_unknown_field`,
-  `test_create_preserves_null_optional_field`.
+  `test_create_preserves_null_optional_field`. Postman covers the empty-name,
+  boundary-price, inverted-date, unknown-field, and null-optional cases; the
+  500-character case is pytest-only.
 - **Impact:** Consumers cannot rely on the API to enforce business rules;
   validation must live client-side. Tests pin verbatim storage so any
   future tightening is caught.
@@ -152,8 +158,9 @@ functions from `tests/api/`.
   `Content-Type: text/html; charset=utf-8`.
 - **Expected result:** Either `406` or XML served as `application/xml`.
 - **Actual result:** `200` XML body with `text/html` content type.
-- **Evidence:** `docs/api-inventory.md` §1/`CON-006`; scenario `CON-006`
-  pins `Accept: application/json` on all JSON clients.
+- **Evidence:** Manual live probe recorded in `docs/api-inventory.md` §1 and
+  scenario `CON-006`. It is documentation-only: no automated request asserts
+  XML response negotiation. JSON clients pin `Accept: application/json`.
 - **Impact:** Content-negotiation surprise for generic HTTP clients;
   mitigated by pinning `Accept` explicitly everywhere.
 
@@ -186,11 +193,12 @@ functions from `tests/api/`.
 
 1. Probes ran against the live host (`requests`, curl-equivalent) before
    any assertion was written (Rule 2 — verify the API).
-2. Each discrepancy was re-probed (valid/invalid/empty variants) and only
-   then pinned in `docs/test-scenarios.md` with an **[observed]** tag.
-3. Automation asserts observed behavior; contract opinions live in notes,
-   never in pass/fail logic (so a future API fix shows up as a clean,
-   explainable failure, not a hidden pass).
+2. Each discrepancy was recorded in `docs/test-scenarios.md` with an
+   **[observed]** tag; whether it is automated, and in which harness, is
+   called out in the evidence above.
+3. Where automation exists, it asserts observed behavior; contract opinions
+   live in notes, never in pass/fail logic (so a future API fix shows up as a
+   clean, explainable failure, not a hidden pass).
 4. No defects were invented for portfolio effect. If this were a real client
    engagement, D-001 and D-002 would be filed as bugs; D-003–D-007 would
    ship as documented contract quirks with reproduction steps.

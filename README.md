@@ -12,8 +12,8 @@ covering functional, negative, boundary, contract/schema, authentication, and
 end-to-end workflow testing in **two harnesses — Postman/Newman and Python
 (pytest + requests + jsonschema)** — both gated in **GitHub Actions**.
 
-> Verified 2026-10-04: **pytest 49 passed / 0 failed**; **Newman 57 requests /
-> 215 assertions / 0 failed**. Every number in this README was observed in a
+> Verified 2026-10-04: **pytest 50 passed / 0 failed**; **Newman 61 requests /
+> 231 assertions / 0 failed**. Every number in this README was observed in a
 > real run — nothing is projected or fabricated.
 
 ## Technologies
@@ -46,9 +46,9 @@ end-to-end workflow testing in **two harnesses — Postman/Newman and Python
 - **Schema validation** — auth, booking, create-response, and list contracts
   asserted in both harnesses (4 schemas each side)
 - **Data integrity** — every create/update/patch test re-fetches and compares
-- **End-to-end workflows** — full lifecycle
-  auth → create → get → put → get → patch → delete → verify-gone on token
-  auth **and** on Basic auth (Postman folder 08)
+- **End-to-end workflows** — token: auth → create → get → put → get → patch
+  → get → delete → verify-gone; Basic: create → put → get → patch → get →
+  delete → verify-gone (Postman folder 08)
 
 ## Automation (how it runs)
 
@@ -57,9 +57,10 @@ Postman collection → Newman CLI → postman-tests.yml (CI)
 Python tests      → pytest       → api-tests.yml (CI)
 ```
 
-Both workflows fail closed: any test, install, or artifact failure fails the
-job (no `continue-on-error`; only uploads use `if: always()`). JUnit +
-HTML reports upload as artifacts on every run.
+Both workflows fail closed: any test, install, validation, or artifact upload
+failure fails the job. Missing report files also fail the upload step
+(`if-no-files-found: error`); uploads use `if: always()` so reports are
+attempted even when tests fail.
 
 ## Repository structure
 
@@ -69,7 +70,7 @@ HTML reports upload as artifacts on every run.
 │                          # api-inventory, defect-summary, traceability-matrix,
 │                          # newman guide, architecture
 ├── postman/
-│   ├── collections/       # restful-booker-api.postman_collection.json (57 requests)
+│   ├── collections/       # restful-booker-api.postman_collection.json (61 requests)
 │   ├── environments/      # restful-booker.postman_environment.json
 │   └── schemas/           # auth / booking / booking-response / booking-list
 ├── tests/
@@ -141,9 +142,10 @@ so runs work with and without `-e`:
 | `firstName` / `lastName` | pre-request (`PM-<epoch>`) | create body + round-trip asserts | unique, cross-traffic-safe data |
 | `e2eFirst` | E2E pre-request (`E2E-<epoch>`) | E2E create + read-back | isolated lifecycle identity |
 
-Workflows (folder 08, `E2E-001` token + `E2E-002` Basic): each runs
-auth → create → get → put → get → patch → delete → verify-gone, asserting
-every hop.
+Workflows (folder 08): `E2E-001` runs auth → create → get → put → get →
+patch → get → delete → verify-gone; `E2E-002` runs create → put → get →
+patch → get → delete → verify-gone. Both assert persisted state after each
+write.
 
 ## Contract schemas
 
@@ -173,19 +175,19 @@ Both trigger on `push`, `pull_request`, and `workflow_dispatch`.
 | --- | --- |
 | API endpoint×method combos covered | 10 (`GET`+`HEAD /ping`, `POST /auth`, `GET`+`POST /booking`, `GET`/`PUT`/`PATCH`/`DELETE /booking/{id}`) |
 | Test scenarios (`docs/test-scenarios.md`) | 56 (P0 18 / P1 38) |
-| Postman requests | 57 (8 folders) |
-| Postman assertions (last green run) | 215 passed / 0 failed |
-| Python tests (`pytest --collect-only`) | 49 passed / 0 failed (47 scenario + 2 suite-hygiene meta-tests) |
+| Postman requests | 61 (8 folders) |
+| Postman assertions (last green run) | 231 passed / 0 failed |
+| Python tests (`pytest --collect-only`) | 50 collected (48 scenario + 2 suite-hygiene meta-tests) |
 | Negative scenarios | 24 (12 NEG + 7 BND + AUTH-002…005/008/009 equivalents) |
 | Schemas validated | 4 contracts × 2 harnesses |
-| E2E lifecycles | 2 (token + Basic), every hop asserted |
+| E2E lifecycles | 2 (token + Basic), persisted state re-fetched after PUT and PATCH |
 
 ## Evidence & presentation
 
 Start with [`docs/evidence/`](docs/evidence/) — every claim below traces to
 a committed artifact:
 
-- `test-run-summary.md` — pytest 49 passed, Newman 57 requests / 215 assertions
+- `test-run-summary.md` — pytest 50 passed, Newman 61 requests / 231 assertions
 - `api-request-response-example.md` — live lifecycle transcript
   (auth → create → round-trip → delete `201`)
 - `schema-validation-example.md` — the auth contract + the assertion that
@@ -206,9 +208,10 @@ flowchart TD
     F --> H[CI Pass / Fail]
 ```
 
-GUI screenshots (Postman app, pytest HTML report, Actions run page) are
-captured manually — see `docs/evidence/README.md` for the exact shot list.
-They are absent until a human takes them; nothing is staged.
+Text evidence, diagrams, and examples are committed. Phase 24 remains partial:
+the Postman, pytest HTML, and GitHub Actions GUI screenshots require manual
+capture; see `docs/evidence/README.md` for the shot list. They are absent
+until captured—none are fabricated.
 
 ## Docs (start here in order)
 
@@ -233,21 +236,23 @@ They are absent until a human takes them; nothing is staged.
 ## Status
 
 - [x] Phases 0–4 — foundation, reconnaissance, strategy/plan, scenarios, data
-- [x] Phases 5–10 — Postman collection (8 folders, 57 requests), assertions,
+- [x] Phases 5–10 — Postman collection (8 folders, 61 requests), assertions,
   4 schemas, dual-scope variables + chained lifecycles (token + Basic),
   consolidated negative section, E2E workflows
 - [x] Phases 11–17 — Newman (`npm ci`, CLI + JUnit, `docs/newman.md`);
-  pytest suite (49 passed); hardened `ApiClient`; fixtures; shared schema
+  pytest suite (50 passed); hardened `ApiClient`; fixtures; shared schema
   helper; parametrization; env-var-only config
 - [x] Phases 18–20 — fail-closed CI (both workflows), JUnit + HTML reports
   as artifacts, locally proven exactly as CI runs them
 - [x] Phase 21 — `docs/defect-summary.md` (7 observed findings, no fabrication)
 - [x] Phase 22 — `docs/traceability-matrix.md` (56 scenarios mapped end to end)
 - [x] Phase 23 — this README (this document)
-- [x] Phase 24 — evidence pack (`docs/evidence/`), CI badges, presentation section
+- [ ] Phase 24 — text evidence, CI badges, and presentation are complete;
+  three GUI screenshots remain pending manual capture (`docs/evidence/README.md`)
 - [x] Phase 25 — `docs/architecture.md` (system + lifecycle + workflow diagrams)
 - [x] Phase 26 — `docs/quality-review.md` (no blocking findings)
-- [x] Phase 27 — `docs/failure-simulation.md` (red path proven both harnesses, exit 1)
+- [ ] Phase 27 — local pytest/Newman red paths verified; deliberately failing
+  GitHub Actions run remains unverified (`docs/failure-simulation.md`)
 - [x] Phase 28 — `docs/portfolio-audit.md` (outside-in audit, leftovers listed)
 - [x] Phase 29 — all deliverables present (verified file-by-file)
 - [x] Phase 30 — `docs/definition-of-done.md` (done except manual screenshots)

@@ -1,8 +1,8 @@
 # Failure Simulation (Phase 27)
 
-> One controlled break per harness, observed 2026-10-04. No red commit was
-> pushed — CI behavior follows by construction (both workflows run the same
-> commands with no `continue-on-error`; see `docs/quality-review.md`).
+> One controlled break per harness, observed locally on 2026-10-04. No
+> deliberately failing GitHub Actions run has been observed; local exit-code
+> checks do not prove hosted job behavior.
 
 ## pytest
 
@@ -14,11 +14,13 @@
 
 - **Break:** throwaway copy of the collection (`/tmp`, real files untouched)
   — `HealthCheck - GET ping` assertion flipped `status(201) → status(200)`.
-- **Observed:** `215 assertions, 1 failed`, exit code **1**. Copy deleted.
+- **Observed:** At the time of this simulation, `215 assertions, 1 failed`,
+  exit code **1**. The collection has since gained four persisted-state GET
+  checks; the current green baseline is 231 assertions. Copy deleted.
 - **Restore:** nothing to restore — the committed collection was never
   modified (`git status` clean on `postman/`).
 
-## Chain (evidence-backed, not asserted)
+## CI configuration evidence (not an observed red Actions run)
 
 ```text
 Wrong assertion
@@ -27,5 +29,8 @@ Wrong assertion
   → job fails, artifacts still upload (if: always())
 ```
 
-The gate is real in both directions: correct code greens (49 passed / 215
-assertions, `docs/evidence/test-run-summary.md`), broken code reds.
+The workflow files structurally propagate non-zero test exits and attempt
+artifact uploads with `if: always()`. Successful hosted runs are recorded in
+GitHub Actions; the hosted red path remains **unverified**. Current local
+green baseline: 50 pytest tests and 231 Newman assertions
+(`docs/evidence/test-run-summary.md`).

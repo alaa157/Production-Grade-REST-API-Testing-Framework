@@ -9,9 +9,9 @@
 
 | Check (plan §26) | Result |
 | --- | --- |
-| Independent? | **Yes.** `test_booking_negative.py` alone: 22 passed; `test_auth.py` alone: 5 passed (2026-10-04). Function-scoped `created_booking` gives every test fresh data; session fixtures (`api_client`, `auth_token`) are stateless. Only intentional statefulness is the E2E chain (folder 08) and hop-by-hop pytest equivalents. |
-| Meaningful assertions? | **Yes.** Grep: zero bare `assert response.status_code`, zero vacuous asserts. Every test pins an exact observed code **and** body/shape (`== {"reason": ...}`, round-trip equality, `text == "Forbidden"`). |
-| Negative cases useful? | **Yes.** 24 scenarios: 4 auth failures, 5 missing-field `500`s, coercion trio, malformed JSON, header cases, invalid IDs, re-delete — each asserting observed behavior with a contract-opinion note, never a weakened assertion. |
+| Independent? | **Yes.** `test_booking_negative.py` alone: 23 passed; `test_auth.py` alone: 5 passed (2026-10-04). Function-scoped `created_booking` gives every test fresh data; session fixtures (`api_client`, `auth_token`) are stateless. Only intentional statefulness is the E2E chain (folder 08) and hop-by-hop pytest equivalents. |
+| Meaningful assertions? | **Yes.** Grep: zero bare `assert response.status_code` and zero vacuous asserts. Status-only checks are limited to cases whose stated contract is the code; malformed-ID and re-delete checks also pin the observed body and `text/plain` content type. Other responses assert meaningful shapes or values (`{"reason": ...}`, round-trip equality, `text == "Forbidden"`). |
+| Negative cases useful? | **Yes.** 24 scenarios: 4 auth failures, 5 missing-field `500`s, coercion trio, malformed JSON, header cases, invalid IDs (including `9999999999`), re-delete — each asserting observed behavior with a contract-opinion note, never a weakened assertion. |
 | Edge cases included? | **Yes.** 7 BND scenarios (0/−50/huge price, inverted dates, 500-char name, huge ID, minimal-payload floor). |
 | Status codes validated? | **Yes.** All 10 endpoint×method combos pin observed codes incl. 201-ping, 201-delete, 403/404/405 paths. |
 | Bodies validated? | **Yes.** Round-trip equality on create/update/patch; echo field-for-field; error bodies (`Created`, `Not Found`, `Forbidden`, `Bad credentials`). |
@@ -43,13 +43,15 @@
 | Check | Result |
 | --- | --- |
 | Works from clean environment? | **Yes.** Both workflows start at `checkout` + full install (`pip install -r requirements.txt`, `npm ci`) — no cached state assumed. |
-| Failure fails the workflow? | **Yes.** Grep: zero `continue-on-error` in `.github/`; test steps exit non-zero on any failure; only artifact uploads use `if: always()`. (End-to-end gate proof — deliberate failure simulation — is Phase 27, not claimed here.) |
+| Failure fails the workflow? | **Structurally yes; red Actions run not observed.** Grep: zero `continue-on-error` in `.github/`; test steps exit non-zero on any failure; only artifact uploads use `if: always()`. Local pytest/Newman non-zero exits are documented in Phase 27. An actual failing GitHub Actions run remains unverified. |
 | Artifacts uploaded? | **Yes.** `pytest-reports` (JUnit + HTML) and `newman-reports` (JUnit) on every run, pass or fail. |
 | Failures reproducible by another developer? | **Yes.** JUnit names `file::function[param]`; schema failures print violation paths; defect entries give repro steps. |
 
 ## Verdict
 
-**Approve — no blocking findings.** Two accepted nuances recorded above
-(demo-default literal, cleanup broad-except) with justification; neither
-degrades correctness, security, or maintainability. Next gates: Phase 27
-(failure simulation proving the red path) then Phase 28 (portfolio audit).
+**Approve with one verification limitation.** The demo-credential default and
+best-effort cleanup exception are justified. Both workflows have successful
+green runs and fail-closed configuration, but a deliberately failing GitHub
+Actions run has not been observed; Phase 27 records that as an open evidence
+item rather than treating local exit-code checks as proof of hosted CI
+behavior. The refreshed Phase 28 audit records the current follow-up items.

@@ -52,6 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pytest-reports
+          if-no-files-found: error
           path: |
             reports/pytest-results.xml
             reports/pytest-report.html

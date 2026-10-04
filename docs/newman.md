@@ -1,7 +1,7 @@
 # Newman CLI Execution (Phase 11)
 
 > Collection: `postman/collections/restful-booker-api.postman_collection.json`
-> (8 folders, 57 requests, 215 assertions).
+> (8 folders, 61 requests, 231 assertions).
 > Environment: `postman/environments/restful-booker.postman_environment.json`.
 >
 > Layout note (review consolidation, Phase 9): folders 02–04 are happy-path
@@ -23,7 +23,7 @@ prefers a local binary when present and falls back to `newman` on `PATH`.
 ## 2. Run
 
 ```bash
-# Full suite with environment (215 assertions)
+# Full suite with environment (231 assertions)
 npm run postman
 # equivalent:
 newman run postman/collections/restful-booker-api.postman_collection.json \
@@ -46,7 +46,7 @@ environment file exists, otherwise the bare collection run).
 | `cli` | default | human-readable run output, exit code gates CI |
 | `junit` | `-r cli,junit --reporter-junit-export reports/newman-results.xml` | CI artifacts, failure triage per request |
 
-JUnit output is one `<testsuite>` per request (57 suites, all with
+JUnit output is one `<testsuite>` per request (61 suites, all with
 `failures="0"`). HTML is intentionally not bundled: JUnit XML is the
 CI-preferred format per the plan, and `pytest-html` covers the human-readable
 side for Python. (`newman-reporter-htmlextra` can be added later without
@@ -77,5 +77,6 @@ assumed — Phase 27 failure simulation re-proves it.
 
 ## 6. Evidence
 
-2026-10-03, local + global newman 6.2.2: **57/57 requests, 215/215 assertions,
-0 failed**, with `-e` and bare. JUnit export verified (57 suites, 0 failures).
+2026-10-04, local Newman 6.2.2: **61/61 requests, 231/231 assertions,
+0 failed**, with `-e` and bare collection runs. JUnit export verified
+(61 suites, 0 failures).

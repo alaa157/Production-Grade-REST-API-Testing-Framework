@@ -3246,6 +3246,59 @@
           ]
         },
         {
+          "name": "E2E verify full update persisted",
+          "request": {
+            "description": "E2E-001: GET confirms PUT changes persisted.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E]\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type is JSON [CON-002]\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\"); });",
+                  "var data = pm.response.json();",
+                  "pm.test(\"GET confirms persisted booking state [E2E]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"UpdatedFirst\");",
+                  "    pm.expect(data.lastname).to.eql(\"UpdatedLast\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "    pm.expect(data.depositpaid).to.eql(false);",
+                  "    pm.expect(data.bookingdates.checkin).to.eql(\"2026-03-01\");",
+                  "    pm.expect(data.bookingdates.checkout).to.eql(\"2026-03-05\");",
+                  "    pm.expect(data.additionalneeds).to.eql(\"Lunch\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "E2E partial update booking",
           "request": {
             "description": "E2E-001 step 5: PATCH merges.",
@@ -3308,6 +3361,59 @@
                   "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
                   "    pm.expect(pm.response.responseTime).to.be.below(2000);",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E verify partial update persisted",
+          "request": {
+            "description": "E2E-001: GET confirms PATCH changes persisted.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E]\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type is JSON [CON-002]\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\"); });",
+                  "var data = pm.response.json();",
+                  "pm.test(\"GET confirms persisted booking state [E2E]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"E2E-Patched\");",
+                  "    pm.expect(data.lastname).to.eql(\"UpdatedLast\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "    pm.expect(data.depositpaid).to.eql(false);",
+                  "    pm.expect(data.bookingdates.checkin).to.eql(\"2026-03-01\");",
+                  "    pm.expect(data.bookingdates.checkout).to.eql(\"2026-03-05\");",
+                  "    pm.expect(data.additionalneeds).to.eql(\"Lunch\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
                 ]
               }
             }
@@ -3544,6 +3650,58 @@
           ]
         },
         {
+          "name": "E2E(Basic) verify full update persisted",
+          "request": {
+            "description": "E2E-002: GET confirms Basic-auth PUT changes persisted.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Basic YWRtaW46cGFzc3dvcmQxMjM=",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E]\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type is JSON [CON-002]\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\"); });",
+                  "var data = pm.response.json();",
+                  "pm.test(\"GET confirms persisted booking state [E2E]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(pm.environment.get(\"e2eBasicFirst\") || pm.collectionVariables.get(\"e2eBasicFirst\"));",
+                  "    pm.expect(data.lastname).to.eql(\"Lifecycle\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "    pm.expect(data.depositpaid).to.eql(false);",
+                  "    pm.expect(data.bookingdates.checkin).to.eql(\"2026-03-01\");",
+                  "    pm.expect(data.bookingdates.checkout).to.eql(\"2026-03-05\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "E2E(Basic) partial update booking",
           "request": {
             "description": "E2E-002 step 3: PATCH over Basic auth merges.",
@@ -3606,6 +3764,58 @@
                   "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () {",
                   "    pm.expect(pm.response.responseTime).to.be.below(2000);",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E(Basic) verify partial update persisted",
+          "request": {
+            "description": "E2E-002: GET confirms Basic-auth PATCH changes persisted.",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Basic YWRtaW46cGFzc3dvcmQxMjM=",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 [E2E]\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type is JSON [CON-002]\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\"); });",
+                  "var data = pm.response.json();",
+                  "pm.test(\"GET confirms persisted booking state [E2E]\", function () {",
+                  "    pm.expect(data.firstname).to.eql(\"E2EBasic-Patched\");",
+                  "    pm.expect(data.lastname).to.eql(\"Lifecycle\");",
+                  "    pm.expect(data.totalprice).to.eql(200);",
+                  "    pm.expect(data.depositpaid).to.eql(false);",
+                  "    pm.expect(data.bookingdates.checkin).to.eql(\"2026-03-01\");",
+                  "    pm.expect(data.bookingdates.checkout).to.eql(\"2026-03-05\");",
+                  "});",
+                  "pm.test(\"Response time below 2000ms (client-side smoke guard, not an SLA)\", function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
                 ]
               }
             }

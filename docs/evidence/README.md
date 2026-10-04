@@ -6,8 +6,8 @@
 ## Regenerable in one command (do this first)
 
 ```bash
-./scripts/run_tests.sh    # pytest — last verified: 49 passed / 0 failed
-./scripts/run_postman.sh  # Newman — last verified: 57 requests, 215 assertions, 0 failed
+./scripts/run_tests.sh    # pytest — last verified: 50 passed / 0 failed
+./scripts/run_postman.sh  # Newman — last verified: 61 requests, 231 assertions, 0 failed
 ```
 
 CI artifacts (JUnit + HTML) upload on every GitHub Actions run for both
@@ -30,7 +30,7 @@ the portfolio, capture and drop them here:
 - `screenshots/postman-collection.png` — Postman app with folder `08` open,
   `E2E-001` chain visible, Tests tab showing green asserts.
 - `screenshots/pytest-html-report.png` — `reports/pytest-report.html` open in
-  a browser after `./scripts/run_tests.sh` (49 passed row visible).
+  a browser after `./scripts/run_tests.sh` (50 passed row visible).
 - `screenshots/github-actions-run.png` — GitHub Actions page for this repo
   with both workflows green on the same commit.
 

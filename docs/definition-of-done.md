@@ -35,7 +35,7 @@
 
 ## Postman
 
-- [x] Professional collection structure (8 folders, 57 requests)
+- [x] Professional collection structure (8 folders, 61 requests)
 - [x] Environment variables (dual-scope, runs with and without `-e`)
 - [x] Dynamic variables (epoch-unique names, no hardcoded IDs)
 - [x] Request chaining (auth → create → use → delete; folder 08 lifecycles)
@@ -52,13 +52,13 @@
 
 ## Python
 
-- [x] pytest implemented (49 passed)
+- [x] pytest implemented (50 passed)
 - [x] requests implemented (via session-based `ApiClient`)
 - [x] reusable API client (`src/api_client.py`, 67 lines)
 - [x] fixtures (session + function scopes, best-effort cleanup)
 - [x] parameterized tests (auth failures, missing fields, prices, IDs)
 - [x] schema validation (shared helper, `<path>: <message>` failures)
-- [x] negative tests (22 in `test_booking_negative.py` + auth/header files)
+- [x] negative tests (23 in `test_booking_negative.py` + auth/header files)
 
 ## CI/CD
 

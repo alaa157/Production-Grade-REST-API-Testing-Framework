@@ -50,3 +50,5 @@ def test_redelete_returns_405(api_client, auth_token, created_booking):
     response = api_client.delete(f"/booking/{bookingid}", headers=headers)
 
     assert response.status_code == 405
+    assert response.text == "Method Not Allowed"
+    assert "text/plain" in response.headers.get("Content-Type", "")

@@ -30,6 +30,8 @@ def test_get_malformed_booking_id_returns_404_not_400(api_client):
     response = api_client.get("/booking/abc")
 
     assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert "text/plain" in response.headers.get("Content-Type", "")
 
 
 def test_list_bookings_returns_id_array_shape_only(api_client):

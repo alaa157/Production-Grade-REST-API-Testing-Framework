@@ -152,7 +152,7 @@ def test_create_with_very_long_name_is_stored_verbatim(
         _assert_created_booking_is_removed(api_client, auth_token, response)
 
 
-@pytest.mark.parametrize("booking_id", ["999999", "abc"])
+@pytest.mark.parametrize("booking_id", ["999999", "9999999999", "abc"])
 def test_get_invalid_booking_id_returns_404(api_client, booking_id):
     response = api_client.get(f"/booking/{booking_id}")
 

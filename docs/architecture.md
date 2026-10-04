@@ -35,14 +35,17 @@ breaks both sides loudly.
 flowchart LR
     A[Authenticate] --> B[Create Booking]
     B --> C[Get Booking]
-    C --> D[Update Booking]
-    D --> E[Patch Booking]
-    E --> F[Delete Booking]
-    F --> G[Verify Deletion]
+    C --> D[Full Update PUT]
+    D --> E[Get and verify PUT persisted]
+    E --> F[Partial Update PATCH]
+    F --> G[Get and verify PATCH persisted]
+    G --> H[Delete Booking]
+    H --> I[Verify Deletion]
 ```
 
 Reading: the only intentionally stateful flow in the project
-(`E2E-001` token, `E2E-002` Basic — Postman folder 08, every hop asserted).
+(`E2E-001` token, `E2E-002` Basic — Postman folder 08, GET verifies the
+persisted state after both PUT and PATCH, and every hop is asserted).
 pytest covers the same spine hop-by-hop with independent tests
 (create → round-trip, put-persist, patch-persist, delete + verify-gone) so
 no pytest test depends on execution order (Rule 8); the statefulness lives
@@ -81,7 +84,7 @@ or a defect entry — never to a weakened assertion.
 | Fixtures | `tests/conftest.py` | `api_client`, `auth_token` (session), `valid_booking_payload`, `created_booking` (function, best-effort cleanup) | Global mutable state |
 | Schema helper | `tests/schema_validation.py` | Draft-7 validation with `<path>: <message>` failures, local `$ref` | Loose schemas (strict required/type/nesting) |
 | Contracts | `postman/schemas/`, `tests/schemas/` | 4 byte-identical contracts (auth, booking, booking-response, booking-list) | Drift (copies compared when touched) |
-| Collection | `postman/collections/` + `environments/` | 57 requests / 8 folders, chaining via dual-scope variables | Hardcoded IDs (only intentional negative probes) |
+| Collection | `postman/collections/` + `environments/` | 61 requests / 8 folders, chaining via dual-scope variables | Hardcoded IDs (only intentional negative probes) |
 | CI | `.github/workflows/` | Fail-closed gates, JUnit + HTML artifacts | `continue-on-error` (only uploads use `if: always()`) |
 | Docs | `docs/` | Strategy → scenarios → automation → defects → traceability → evidence | Fabricated numbers (all counts observed) |
 
