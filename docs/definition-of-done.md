@@ -1,7 +1,9 @@
 # Definition of Done (Phase 30)
 
-> Verdict per checkbox, 2026-10-04. Checked means **observed**, not assumed —
-> each cites its evidence. Two items are partial and say so.
+> Verdict per checkbox, 2026-10-04. Checked items were verified against the
+> repository, local test runs, or recorded CI evidence. Evidence/screenshots
+> are partial, and hosted failure propagation is structurally configured but
+> has not been proven by a deliberately failing GitHub Actions run.
 
 ## API Coverage
 
@@ -21,8 +23,10 @@
 - [x] Positive cases implemented
 - [x] Negative cases implemented (24 scenarios)
 - [x] Boundary cases implemented (7 scenarios)
-- [x] Data integrity verified (round-trip equality on every mutation test)
-- [x] End-to-end workflow implemented (token + Basic lifecycles, every hop)
+- [x] Data integrity verified (create round-trip, PUT/PATCH persistence, and
+  delete verify-gone checks; pytest flows remain independent)
+- [x] End-to-end workflow implemented (token + Basic lifecycles; GET verifies
+  persisted state after PUT and PATCH)
 
 ## Validation
 
@@ -39,7 +43,7 @@
 - [x] Environment variables (dual-scope, runs with and without `-e`)
 - [x] Dynamic variables (epoch-unique names, no hardcoded IDs)
 - [x] Request chaining (auth → create → use → delete; folder 08 lifecycles)
-- [x] Assertions (215, status + latency guard + CT + fields/types + values)
+- [x] Assertions (231, status + latency guard + CT + fields/types + values)
 - [x] Negative tests (folder 07, 20 requests)
 - [x] Schema validation (inline `jsonSchema` on key responses)
 
@@ -47,7 +51,8 @@
 
 - [x] Collection runs from CLI (`run_postman.sh`, bare and `-e` forms)
 - [x] Environment supported
-- [x] CI-compatible exit codes (Phase 27: 1 failure → exit 1, observed)
+- [x] Local CI-compatible exit codes (Phase 27: pytest/Newman failure →
+  exit 1, observed); hosted red run not yet observed
 - [x] Reports generated (CLI + JUnit via `postman:ci`)
 
 ## Python
@@ -65,8 +70,10 @@
 - [x] GitHub Actions configured (2 workflows, push/PR/dispatch)
 - [x] pytest runs automatically (`api-tests.yml`)
 - [x] Newman runs automatically (`postman-tests.yml`)
-- [x] failures fail CI (no `continue-on-error`; red path proven locally) —
-  first green Actions run lights the README badges after push
+- [x] Workflows structurally fail jobs for non-zero test exits
+  (`continue-on-error` absent); local red path is proven
+- [ ] Hosted red path — a deliberately failing GitHub Actions run has not
+  been observed (`docs/failure-simulation.md`)
 - [x] reports/artifacts available (JUnit + HTML uploaded every run)
 
 ## Documentation
@@ -87,7 +94,8 @@
 - [x] No secrets (scan clean; `.env` never in git)
 - [x] No fake defects (7 observed findings, methodology noted)
 - [x] No fabricated metrics (all counts from 2026-10-04 runs)
-- [x] Reproducible setup (scripts + pinned installs + env defaults)
+- [x] Reproducible setup (run scripts, npm lockfile, and environment defaults)
 
-**Done except manual screenshots**, which require a human and are tracked,
-not faked.
+**Core deliverables are present.** Final completion evidence still needs
+three manually captured GUI screenshots and an observed failing GitHub
+Actions run; neither is claimed from inference or local simulation.

@@ -255,4 +255,6 @@ until captured—none are fabricated.
   GitHub Actions run remains unverified (`docs/failure-simulation.md`)
 - [x] Phase 28 — `docs/portfolio-audit.md` (outside-in audit, leftovers listed)
 - [x] Phase 29 — all deliverables present (verified file-by-file)
-- [x] Phase 30 — `docs/definition-of-done.md` (done except manual screenshots)
+- [ ] Phase 30 — `docs/definition-of-done.md`; core deliverables are present,
+  but manual GUI screenshots and an observed failing GitHub Actions run remain
+  outstanding
