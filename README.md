@@ -247,4 +247,7 @@ They are absent until a human takes them; nothing is staged.
 - [x] Phase 24 — evidence pack (`docs/evidence/`), CI badges, presentation section
 - [x] Phase 25 — `docs/architecture.md` (system + lifecycle + workflow diagrams)
 - [x] Phase 26 — `docs/quality-review.md` (no blocking findings)
-- [ ] Phase 27+ — see `implementaion_plane.md`
+- [x] Phase 27 — `docs/failure-simulation.md` (red path proven both harnesses, exit 1)
+- [x] Phase 28 — `docs/portfolio-audit.md` (outside-in audit, leftovers listed)
+- [x] Phase 29 — all deliverables present (verified file-by-file)
+- [x] Phase 30 — `docs/definition-of-done.md` (done except manual screenshots)
