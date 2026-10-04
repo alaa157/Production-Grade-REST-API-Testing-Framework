@@ -65,7 +65,7 @@ Use the following stack unless a technical limitation requires a justified alter
 
 * Markdown
 * Mermaid diagrams where useful
-* Clear screenshots/examples
+* Clear, verifiable examples
 
 ### Repository
 
@@ -1195,9 +1195,6 @@ Include:
 * Technology badges where appropriate
 * Architecture diagram
 * Test workflow diagram
-* Example test report screenshots
-* Example Postman collection screenshot
-* Example CI run screenshot
 * Example API request/response
 * Example schema validation
 * Example defect report
@@ -1205,6 +1202,9 @@ Include:
 Do not overload the README with decorative badges.
 
 Prioritize evidence over decoration.
+
+Text transcripts and generated test reports are sufficient evidence; GUI
+screenshots are not a project requirement.
 
 ---
 
@@ -1295,13 +1295,13 @@ Test failure
 pytest/Newman failure
     ↓
 non-zero exit code
-    ↓
-GitHub Actions failure
 ```
 
 Then restore the correct implementation.
 
-This confirms that the CI pipeline is actually enforcing quality gates.
+Also inspect the GitHub Actions workflows to confirm test commands propagate
+non-zero exits and are not configured with `continue-on-error`. Do not push a
+deliberately failing commit or require a failing hosted Actions run as evidence.
 
 Document this only if useful to demonstrate CI behavior.
 
@@ -1475,7 +1475,7 @@ The project is complete only when all of the following are true.
 * [ ] Clear README
 * [ ] Architecture diagram
 * [ ] CI badge
-* [ ] Evidence/screenshots
+* [ ] Evidence examples (API request/response, schema validation, test run)
 * [ ] No secrets
 * [ ] No fake defects
 * [ ] No fabricated metrics

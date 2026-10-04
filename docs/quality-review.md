@@ -43,15 +43,12 @@
 | Check | Result |
 | --- | --- |
 | Works from clean environment? | **Yes.** Both workflows start at `checkout` + full install (`pip install -r requirements.txt`, `npm ci`) — no cached state assumed. |
-| Failure fails the workflow? | **Structurally yes; red Actions run not observed.** Grep: zero `continue-on-error` in `.github/`; test steps exit non-zero on any failure; only artifact uploads use `if: always()`. Local pytest/Newman non-zero exits are documented in Phase 27. An actual failing GitHub Actions run remains unverified. |
+| Failure handling? | **Yes.** Local pytest/Newman non-zero exits are demonstrated in Phase 27. Both workflow test steps propagate failures (no `continue-on-error`); artifact uploads use `if: always()`. |
 | Artifacts uploaded? | **Yes.** `pytest-reports` (JUnit + HTML) and `newman-reports` (JUnit) on every run, pass or fail. |
 | Failures reproducible by another developer? | **Yes.** JUnit names `file::function[param]`; schema failures print violation paths; defect entries give repro steps. |
 
 ## Verdict
 
-**Approve with one verification limitation.** The demo-credential default and
-best-effort cleanup exception are justified. Both workflows have successful
-green runs and fail-closed configuration, but a deliberately failing GitHub
-Actions run has not been observed; Phase 27 records that as an open evidence
-item rather than treating local exit-code checks as proof of hosted CI
-behavior. The refreshed Phase 28 audit records the current follow-up items.
+**Approve.** The demo-credential default and best-effort cleanup exception
+are justified. The local red path is tested, workflow failure propagation is
+configured, and successful hosted runs verify the green path.

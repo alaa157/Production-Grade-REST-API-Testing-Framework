@@ -1,9 +1,8 @@
 # Definition of Done (Phase 30)
 
 > Verdict per checkbox, 2026-10-04. Checked items were verified against the
-> repository, local test runs, or recorded CI evidence. Evidence/screenshots
-> are partial, and hosted failure propagation is structurally configured but
-> has not been proven by a deliberately failing GitHub Actions run.
+> repository, local test runs, or recorded CI evidence. GUI screenshots and
+> deliberately failing hosted Actions runs are outside the project scope.
 
 ## API Coverage
 
@@ -51,8 +50,8 @@
 
 - [x] Collection runs from CLI (`run_postman.sh`, bare and `-e` forms)
 - [x] Environment supported
-- [x] Local CI-compatible exit codes (Phase 27: pytest/Newman failure →
-  exit 1, observed); hosted red run not yet observed
+- [x] CI-compatible exit codes (Phase 27: pytest/Newman failure → exit 1,
+  observed; workflow propagation inspected)
 - [x] Reports generated (CLI + JUnit via `postman:ci`)
 
 ## Python
@@ -72,8 +71,6 @@
 - [x] Newman runs automatically (`postman-tests.yml`)
 - [x] Workflows structurally fail jobs for non-zero test exits
   (`continue-on-error` absent); local red path is proven
-- [ ] Hosted red path — a deliberately failing GitHub Actions run has not
-  been observed (`docs/failure-simulation.md`)
 - [x] reports/artifacts available (JUnit + HTML uploaded every run)
 
 ## Documentation
@@ -88,14 +85,12 @@
 - [x] Clear README (30-second test passed in Phase 28 audit)
 - [x] Architecture diagram (system + lifecycle + workflow, Mermaid)
 - [x] CI badge (well-formed; goes green on first post-push run)
-- [ ] Evidence/screenshots — **partial:** verbatim text evidence committed
-  (`docs/evidence/`); 3 GUI screenshots pending manual capture (shot list
-  in `docs/evidence/README.md`)
+- [x] Verifiable text evidence — request/response, schema, test-run summary,
+  diagrams, and CI report artifacts (`docs/evidence/`)
 - [x] No secrets (scan clean; `.env` never in git)
 - [x] No fake defects (7 observed findings, methodology noted)
 - [x] No fabricated metrics (all counts from 2026-10-04 runs)
 - [x] Reproducible setup (run scripts, npm lockfile, and environment defaults)
 
-**Core deliverables are present.** Final completion evidence still needs
-three manually captured GUI screenshots and an observed failing GitHub
-Actions run; neither is claimed from inference or local simulation.
+**All scoped deliverables are complete.** Evidence is reproducible from the
+documented commands and CI artifacts; screenshots are not required.

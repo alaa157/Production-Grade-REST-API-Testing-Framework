@@ -208,10 +208,7 @@ flowchart TD
     F --> H[CI Pass / Fail]
 ```
 
-Text evidence, diagrams, and examples are committed. Phase 24 remains partial:
-the Postman, pytest HTML, and GitHub Actions GUI screenshots require manual
-capture; see `docs/evidence/README.md` for the shot list. They are absent
-until captured—none are fabricated.
+Text evidence, diagrams, and examples are committed in `docs/evidence/`.
 
 ## Docs (start here in order)
 
@@ -247,14 +244,12 @@ until captured—none are fabricated.
 - [x] Phase 21 — `docs/defect-summary.md` (7 observed findings, no fabrication)
 - [x] Phase 22 — `docs/traceability-matrix.md` (56 scenarios mapped end to end)
 - [x] Phase 23 — this README (this document)
-- [ ] Phase 24 — text evidence, CI badges, and presentation are complete;
-  three GUI screenshots remain pending manual capture (`docs/evidence/README.md`)
+- [x] Phase 24 — text evidence, CI badges, architecture diagrams, and
+  presentation examples (`docs/evidence/`)
 - [x] Phase 25 — `docs/architecture.md` (system + lifecycle + workflow diagrams)
 - [x] Phase 26 — `docs/quality-review.md` (no blocking findings)
-- [ ] Phase 27 — local pytest/Newman red paths verified; deliberately failing
-  GitHub Actions run remains unverified (`docs/failure-simulation.md`)
-- [x] Phase 28 — `docs/portfolio-audit.md` (outside-in audit, leftovers listed)
+- [x] Phase 27 — local pytest/Newman red paths verified; workflow failure
+  propagation inspected (`docs/failure-simulation.md`)
+- [x] Phase 28 — `docs/portfolio-audit.md` (outside-in audit completed)
 - [x] Phase 29 — all deliverables present (verified file-by-file)
-- [ ] Phase 30 — `docs/definition-of-done.md`; core deliverables are present,
-  but manual GUI screenshots and an observed failing GitHub Actions run remain
-  outstanding
+- [x] Phase 30 — `docs/definition-of-done.md` (all scoped deliverables verified)

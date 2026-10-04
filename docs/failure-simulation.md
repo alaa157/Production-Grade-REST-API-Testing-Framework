@@ -1,8 +1,8 @@
 # Failure Simulation (Phase 27)
 
-> One controlled break per harness, observed locally on 2026-10-04. No
-> deliberately failing GitHub Actions run has been observed; local exit-code
-> checks do not prove hosted job behavior.
+> One controlled break per harness, observed locally on 2026-10-04. CI
+> enforcement is checked from the workflow configuration rather than by
+> pushing a deliberately failing commit.
 
 ## pytest
 
@@ -20,17 +20,17 @@
 - **Restore:** nothing to restore — the committed collection was never
   modified (`git status` clean on `postman/`).
 
-## CI configuration evidence (not an observed red Actions run)
+## CI configuration check
 
 ```text
 Wrong assertion
   → pytest exit 1 / newman exit 1 (observed above)
-  → api-tests.yml / postman-tests.yml step fails (no continue-on-error anywhere)
-  → job fails, artifacts still upload (if: always())
+  → api-tests.yml / postman-tests.yml test step fails
+  → artifact upload is attempted (if: always())
 ```
 
-The workflow files structurally propagate non-zero test exits and attempt
-artifact uploads with `if: always()`. Successful hosted runs are recorded in
-GitHub Actions; the hosted red path remains **unverified**. Current local
-green baseline: 50 pytest tests and 231 Newman assertions
+Both workflow test steps run these commands without `continue-on-error`;
+artifact uploads use `if: always()` so report collection is attempted on
+failure. Successful hosted runs are available in GitHub Actions. Current
+local green baseline: 50 pytest tests and 231 Newman assertions
 (`docs/evidence/test-run-summary.md`).

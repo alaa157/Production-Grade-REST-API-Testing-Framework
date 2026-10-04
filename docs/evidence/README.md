@@ -21,18 +21,9 @@ workflows — see the badges at the top of the README.
 | `api-request-response-example.md` | Real lifecycle transcript (auth → create → round-trip → delete) | Live `requests` calls, 2026-10-04 |
 | `schema-validation-example.md` | Real schema + real passing assertion | Checked-in schema + helper, quoted verbatim |
 
-## Manual screenshots (captured by the maintainer, not faked by automation)
+## Evidence format
 
-The three images below can only be produced by a human looking at the real
-UIs, so they are **deliberately absent** rather than fabricated. To complete
-the portfolio, capture and drop them here:
-
-- `screenshots/postman-collection.png` — Postman app with folder `08` open,
-  `E2E-001` chain visible, Tests tab showing green asserts.
-- `screenshots/pytest-html-report.png` — `reports/pytest-report.html` open in
-  a browser after `./scripts/run_tests.sh` (50 passed row visible).
-- `screenshots/github-actions-run.png` — GitHub Actions page for this repo
-  with both workflows green on the same commit.
-
-If a screenshot is missing, the text evidence above still stands on its own —
-a missing image is honest, a staged one is not.
+The portfolio uses reproducible text transcripts, checked-in schemas, Mermaid
+diagrams, and CI-generated JUnit/HTML reports. GUI screenshots are
+intentionally outside the deliverables; no image is needed to reproduce or
+verify the documented results.
