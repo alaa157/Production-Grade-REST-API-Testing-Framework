@@ -245,4 +245,6 @@ They are absent until a human takes them; nothing is staged.
 - [x] Phase 22 — `docs/traceability-matrix.md` (56 scenarios mapped end to end)
 - [x] Phase 23 — this README (this document)
 - [x] Phase 24 — evidence pack (`docs/evidence/`), CI badges, presentation section
-- [ ] Phase 25+ — see `implementaion_plane.md`
+- [x] Phase 25 — `docs/architecture.md` (system + lifecycle + workflow diagrams)
+- [x] Phase 26 — `docs/quality-review.md` (no blocking findings)
+- [ ] Phase 27+ — see `implementaion_plane.md`
